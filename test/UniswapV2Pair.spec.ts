@@ -8,6 +8,8 @@ import { pairFixture } from './shared/fixtures'
 import { AddressZero } from 'ethers/constants'
 
 const MINIMUM_LIQUIDITY = bigNumberify(10).pow(3)
+const HARDFORK = 'petersburg'
+
 
 chai.use(solidity)
 
@@ -17,7 +19,7 @@ const overrides = {
 
 describe('UniswapV2Pair', () => {
   const provider = new MockProvider({
-    hardfork: 'istanbul',
+    hardfork: HARDFORK,
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -177,7 +179,13 @@ describe('UniswapV2Pair', () => {
     await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
     const tx = await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
     const receipt = await tx.wait()
-    expect(receipt.gasUsed).to.eq(73462)
+    if (HARDFORK === 'petersburg') {
+      // petersburg
+      expect(receipt.gasUsed).to.eq(76378)
+    } else {
+      // istanbul
+      expect(receipt.gasUsed).to.eq(73462)
+    }
   })
 
   it('burn', async () => {
